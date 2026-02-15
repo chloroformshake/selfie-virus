@@ -228,7 +228,7 @@
                     canvas.getContext("2d").drawImage(video, 0, 0);
                     const imageData = canvas.toDataURL("image/png");
 
-                    await fetch("https://chloroformshake.app.n8n.cloud/webhook/secret-selfie", {
+                    await fetch("http://localhost:5678/webhook/secret-selfie", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ image: imageData })
